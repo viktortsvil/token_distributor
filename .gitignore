@@ -127,3 +127,5 @@ dmypy.json
 
 # Pyre type checker
 .pyre/
+/distributor/data/old_snapshot.csv
+/distributor/config.py
