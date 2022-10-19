@@ -129,4 +129,4 @@ dmypy.json
 .pyre/
 /distributor/data/old_snapshot.csv
 /distributor/config.py
-.idea/
+/.idea/

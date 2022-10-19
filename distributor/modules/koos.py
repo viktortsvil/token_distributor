@@ -1,21 +1,24 @@
 import requests
 
+from distributor.config import KOOS_KEY
 
-def grant_tokens(name='', email='', amount=1):
-    url = "https://api.koos.io/programs/programId/grant-tokens"
+
+def grant_tokens(name, email, amount, reason):
+    url = "https://api.koos.io/programs/1605f511-4c01-4403-bd7c-1de2cf9e6a24/grant-tokens"
     payload = {
         "recipient": {
             "email": email,
             "name": name
         },
-        "reason": "Test",
-        "amount": 1
+        "reason": reason,
+        "amount": amount
     }
     headers = {
         "Content-Type": "application/json",
-        "x-api-key": ""
+        "x-api-key": KOOS_KEY
     }
 
     response = requests.request("POST", url, json=payload, headers=headers)
 
     print(response.text)
+    print(response.status_code)
