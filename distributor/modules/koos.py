@@ -1,4 +1,5 @@
 import requests
+import logging
 
 from distributor.config import KOOS_KEY
 
@@ -20,5 +21,5 @@ def grant_tokens(name, email, amount, reason):
 
     response = requests.request("POST", url, json=payload, headers=headers)
 
-    print(response.text)
-    print(response.status_code)
+    logging.info(response.text)
+    logging.info(response.status_code)

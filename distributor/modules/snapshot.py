@@ -1,3 +1,5 @@
+import logging
+
 import pandas as pd
 
 from distributor.config import SNAPSHOT_PATH
@@ -27,7 +29,12 @@ def generate_new_snapshot(students):
 
 
 def retrieve_old_snapshot():
-    return pd.read_csv(SNAPSHOT_PATH)
+    try:
+        df = pd.read_csv(SNAPSHOT_PATH)
+    except:
+        logging.info(f"No old snapshot was found at given path ({SNAPSHOT_PATH})")
+        df = pd.DataFrame(columns=['student_code', 'com_name', 'com_email'])
+    return df
 
 
 def save_new_snapshot(df_new: pd.DataFrame):
