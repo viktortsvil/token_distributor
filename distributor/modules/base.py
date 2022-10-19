@@ -42,6 +42,10 @@ def main():
     save_new_snapshot(df_new)
     for key, value in comparison.items():
         n_tokens = binom(value['students_new'], 0.5)
+        logging.info(f"{n_tokens} generated out of {value['students_new']} for {key[1]}")
         if n_tokens:
-            grant_tokens(key[0], key[1], n_tokens, 'Hola You Get Some Tokens')
-            pass
+            try:
+                grant_tokens(key[0], key[1], n_tokens, 'Hey! Good job on signing an agreement with a client!')
+                logging.info(f"Granted {n_tokens} to {key[1]} successfully")
+            except BaseException as err:
+                logging.info(f"Failed granting tokens to {key[1]}. Error: {str(err)}")
