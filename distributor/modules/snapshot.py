@@ -31,10 +31,12 @@ def generate_new_snapshot(students):
 def retrieve_old_snapshot():
     try:
         df = pd.read_csv(SNAPSHOT_PATH)
+        retrieved = True
     except:
         logging.info(f"No old snapshot was found at given path ({SNAPSHOT_PATH})")
         df = pd.DataFrame(columns=['student_code', 'com_name', 'com_email'])
-    return df
+        retrieved = False
+    return retrieved, df
 
 
 def save_new_snapshot(df_new: pd.DataFrame):

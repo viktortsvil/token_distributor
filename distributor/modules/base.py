@@ -36,16 +36,19 @@ def main():
     database = _get_database(NOTION_KEY)
     all_students = fetch_all_students(database, STUDENT_DB_ID)
     df_new = generate_new_snapshot(all_students)
-    df_old = retrieve_old_snapshot()
+    retrieved = df_old = retrieve_old_snapshot()
     comparison = compare_snapshots(df_old, df_new)
     logging.debug(comparison)
     save_new_snapshot(df_new)
-    for key, value in comparison.items():
-        n_tokens = binom(value['students_new'], 0.5)
-        logging.info(f"{n_tokens} generated out of {value['students_new']} for {key[1]}")
-        if n_tokens:
-            try:
-                grant_tokens(key[0], key[1], n_tokens, 'Hey! Good job on signing an agreement with a client!')
-                logging.info(f"Granted {n_tokens} to {key[1]} successfully")
-            except BaseException as err:
-                logging.info(f"Failed granting tokens to {key[1]}. Error: {str(err)}")
+    if retrieved:  # not having retrieved an old snapshot represents an old run
+        for key, value in comparison.items():
+            n_tokens = binom(value['students_new'], 0.5)
+            logging.info(f"{n_tokens} generated out of {value['students_new']} for {key[1]}")
+            if n_tokens:
+                try:
+                    grant_tokens(key[0], key[1], n_tokens, 'Hey! Good job on signing an agreement with a client!')
+                    logging.info(f"Granted {n_tokens} to {key[1]} successfully")
+                except BaseException as err:
+                    logging.info(f"Failed granting tokens to {key[1]}. Error: {str(err)}")
+    else:
+        logging.INFO("Old Snapshot not Found. New Snapshot Saved. Exiting...")
