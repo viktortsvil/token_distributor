@@ -36,7 +36,7 @@ def main():
     database = _get_database(NOTION_KEY)
     all_students = fetch_all_students(database, STUDENT_DB_ID)
     df_new = generate_new_snapshot(all_students)
-    retrieved = df_old = retrieve_old_snapshot()
+    retrieved, df_old = retrieve_old_snapshot()
     comparison = compare_snapshots(df_old, df_new)
     logging.debug(comparison)
     save_new_snapshot(df_new)
@@ -51,4 +51,4 @@ def main():
                 except BaseException as err:
                     logging.info(f"Failed granting tokens to {key[1]}. Error: {str(err)}")
     else:
-        logging.INFO("Old Snapshot not Found. New Snapshot Saved. Exiting...")
+        logging.info("Old Snapshot not Found. New Snapshot Saved. Exiting...")
