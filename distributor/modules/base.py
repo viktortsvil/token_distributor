@@ -42,7 +42,7 @@ def main():
     save_new_snapshot(df_new)
     if retrieved:  # not having retrieved an old snapshot represents an old run
         for key, value in comparison.items():
-            n_tokens = binom(value['students_new'], 0.5)
+            n_tokens = binom(value['students_new'], 0.25)
             logging.info(f"{n_tokens} generated out of {value['students_new']} for {key[1]}")
             if n_tokens:
                 try:
