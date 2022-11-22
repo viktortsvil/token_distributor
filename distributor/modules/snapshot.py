@@ -4,26 +4,34 @@ import pandas as pd
 
 from distributor.config import SNAPSHOT_PATH
 
-class Communicator:
-    def __init__(self, name, active_students: set):
-        self.name = name
-        self.students = active_students
+
+def generate_team_db_snapshot(members):
+    raise NotImplementedError
 
 
-def generate_new_snapshot(students):
+def generate_student_db_snapshot(students):
     total = 0
     snapshot = []
     for student in students:
         communicator_list = student['properties']['Responsible Communicator']['people']
         status = student['properties']['Status']['select']
         personal_code = student['properties']['Personal Code']['number']
+        city = student['properties']['Location']['relation']
+        if len(city):
+            city = city[0]['id']
+        else:
+            city = None
         total += 1
         if status and status['name'] == 'Active' and personal_code is not None:
             for communicator in communicator_list:
+                if not (communicator.get('name') and communicator.get('person') and communicator['person'].get(
+                        'email')):
+                    continue
                 snapshot.append({
                     'student_code': personal_code,
                     'com_name': communicator['name'],
-                    'com_email': communicator['person']['email']
+                    'com_email': communicator['person']['email'],
+                    'location': city
                 })
     return pd.DataFrame(snapshot)
 

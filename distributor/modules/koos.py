@@ -1,7 +1,7 @@
 import requests
 import logging
 
-from distributor.config import KOOS_KEY
+from distributor.config import KOOS_KEY, DEBUG
 
 
 def grant_tokens(name, email, amount, reason):
@@ -19,7 +19,9 @@ def grant_tokens(name, email, amount, reason):
         "x-api-key": KOOS_KEY
     }
 
-    response = requests.request("POST", url, json=payload, headers=headers)
-
-    logging.info(response.text)
-    logging.info(response.status_code)
+    if not DEBUG:
+        response = requests.request("POST", url, json=payload, headers=headers)
+        logging.info(response.text)
+        logging.info(response.status_code)
+    else:
+        logging.info("DEBUG=True; Tokens not sent")
