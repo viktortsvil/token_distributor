@@ -22,6 +22,7 @@ def generate_student_db_snapshot(students):
         else:
             city = None
         total += 1
+        added = False
         if status and status['name'] == 'Active' and personal_code is not None:
             for communicator in communicator_list:
                 if not (communicator.get('name') and communicator.get('person') and communicator['person'].get(
@@ -33,7 +34,18 @@ def generate_student_db_snapshot(students):
                     'com_email': communicator['person']['email'],
                     'location': city
                 })
-    return pd.DataFrame(snapshot)
+                added = True
+            if not added:
+                #print(personal_code)
+                snapshot.append({
+                    'student_code': personal_code,
+                    'com_name': "",
+                    'com_email': "",
+                    'location': city
+                })
+    df = pd.DataFrame(snapshot)
+    #print(len(df[df['com_name'] == '']))
+    return df
 
 
 def retrieve_old_snapshot():

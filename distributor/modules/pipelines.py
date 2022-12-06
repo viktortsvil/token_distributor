@@ -1,5 +1,6 @@
 import logging
 from collections import defaultdict as ddict
+from datetime import datetime, timedelta
 
 from notion_database.database import Database
 
@@ -18,7 +19,11 @@ def new_students():
     all_students = fetch_all_students(database, STUDENT_DB_ID)
     df_new = generate_student_db_snapshot(all_students)
     retrieved, df_old = retrieve_old_snapshot()
-    comparison = compare_snapshots(df_old, df_new)
+
+    df_new_filtered = df_new[df_new['com_email'] != '']
+    df_old_filtered = df_old[df_old['com_email'] != '']
+
+    comparison = compare_snapshots(df_old_filtered, df_new_filtered)
     logging.debug(comparison)
     save_new_snapshot(df_new)
     if retrieved:  # not having retrieved an old snapshot represents an old run
@@ -44,6 +49,7 @@ def active_students():
 
     :return: None
     """
+    adjustments = ddict(int, {})  # put token adjustments here when needed (negative being less)
 
     # process the snapshot of active students and convert it into a dict by locations
     retrieved, df_old = retrieve_old_snapshot()
@@ -57,11 +63,23 @@ def active_students():
     # fetch all team members and validate their fields, then parse
     database = _get_database(NOTION_KEY)
     all_team_members = fetch_all_students(database, TEAM_DB_ID)
+    all_towns = fetch_all_students(database, LOCATIONS_DB_ID)
+
+    towns = dict()
+    for town in all_towns:
+        towns[town['id']] = {
+            'name': town['properties']['Town Name']['title'][0]['plain_text'] if len(town['properties']['Town Name']['title']) else "NoNameTown",
+            'count': town_counts[town['id']]
+        }
     for employee in all_team_members:
         employee_location = employee['properties']['Location']['relation']
         employee_name = employee['properties']['Name']['title']
         employee_position = [pos['name'] for pos in employee['properties']['Position']['multi_select']]
         employee_email = employee['properties']['Email']['email']
+        employee_status = employee['properties']['Status']['select']
+        if not (employee_status and employee_status['name'] == 'Active'):
+            continue
+
         if 'Team Lead' in employee_position:
             employee_position = 'Team Lead'
         else:
@@ -71,17 +89,29 @@ def active_students():
         employee_name = employee_name[0]['plain_text']
         employee_locations_id = [loc['id'] for loc in employee_location]
 
-        employee_tokens = 0
         employee_divider = 10 if employee_position == 'Team Lead' else 20
         for loc_id in employee_locations_id:
-            employee_tokens += town_counts[loc_id] / employee_divider
-        employee_tokens = round(employee_tokens)
-        if employee_tokens:
-            try:
-                grant_tokens(employee_name, employee_email, employee_tokens, 'Hey! Good job maintaining students in the locations!')
-                logging.info(f"Granted {employee_tokens} to {employee_name} successfully")
-            except BaseException as err:
-                logging.info(f"Failed granting tokens to {employee_name}. Error: {str(err)}")
+            employee_tokens = round(town_counts[loc_id] / employee_divider)
+            if adjustments[employee_email]:
+                applicable_adjustment = abs(min([adjustments[employee_email], employee_tokens], key=abs))
+                adjustments[employee_email] += applicable_adjustment
+                employee_tokens -= applicable_adjustment
+                #print(f"Adjustment of -{applicable_adjustment} tokens applied to {employee_email}")
+            if employee_tokens:
+                #print(f"({employee_email}) Congratulations! In {(datetime.utcnow() - timedelta(days=7)).strftime('%B')}, "
+                #        f"{towns[loc_id]['name']} had {towns[loc_id]['count']} students! "
+                #        f"Here's your {'Team Lead ' if employee_position == 'Team Lead' else ''}award ({employee_tokens} tokens)")
+                try:
+                    grant_tokens(
+                        employee_name,
+                        employee_email,
+                        employee_tokens,
+                        f"Congratulations! In f{(datetime.utcnow() - timedelta(days=14)).month}, "
+                        f"{towns[loc_id]['name']} had {towns[loc_id]['count']} students! "
+                        f"Here's your {'Team Lead ' if employee_position == 'Team Lead' else ''}award")
+                    logging.info(f"Granted {employee_tokens} to {employee_name} successfully")
+                except BaseException as err:
+                    logging.info(f"Failed granting tokens to {employee_name}. Error: {str(err)}")
 
 def _get_database(NOTION_KEY):
     return Database(NOTION_KEY)
